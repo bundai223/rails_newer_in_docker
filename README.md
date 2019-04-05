@@ -15,9 +15,9 @@ bin/rails_new [some rails new options(see [railsdoc](http://railsdoc.com/rails#%
 ### Examples
 
 ```sh
-bin/rails_new -d mysql myapp
-cd myapp
-docker-compose run --rm rails db:setup
-docker-compose up -d
-curl localhost:3000
+$ bin/rails_new -d mysql myapp
+$ cd myapp
+$ docker-compose run --rm rails db:setup
+$ docker-compose up -d
+$ curl localhost:3000
 ```
