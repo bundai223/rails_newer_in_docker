@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -eu
+
+workdir_in_container=/app
+
+ruby_ver=2.6.2
+alpine_ver=3.9
+image_name=ruby:${ruby_ver}-alpine${alpine_ver}
+
+docker pull $image_name
+docker run -v $(pwd):${workdir_in_container} --rm ${image_name} ${workdir_in_container}/bin/rails_new_in_docker.sh ${workdir_in_container} $@

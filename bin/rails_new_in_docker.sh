@@ -1,10 +1,14 @@
 #!/bin/sh
+set -eu
 
-WORK_DIR=$1
-apk add --no-cache --update build-base linux-headers
+work_dir=$1
+shift
+
+apk add --no-cache --update build-base linux-headers mariadb-connector-c-dev sqlite-dev
+
 gem install rails
 
-cd $WORK_DIR
-shift
 # echo "rails new $@"
+
+cd $work_dir
 rails new $@
