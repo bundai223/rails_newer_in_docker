@@ -1,0 +1,37 @@
+# build develop image
+FROM ruby:2.4.5-alpine3.9 as builder
+
+ENV BUILD_PACKAGES='yarn tzdata mariadb-connector-c-dev libxml2-dev libxslt-dev git'
+
+WORKDIR app
+COPY Gemfile* ./
+RUN apk update && \
+    apk add --no-cache --virtual .build-depends make g++ && \
+    apk add --no-cache $BUILD_PACKAGES && \
+    bundle config build.nokogiri --use-system-libraries && \
+    bundle install --no-cache -j$(nproc) && \
+    yarn install && \
+    yarn cache clean
+    # find /usr/local/bundle -path '*/gems/*/ext/*/Makefile' -exec dirname {} \; | xargs -n1 -I{} make -C {} clean && \
+
+# build image
+FROM ruby:2.4.5-alpine3.9 as production
+
+ENV RUNTIME_PACKAGES='yarn tzdata mariadb-connector-c-dev libxml2-dev libxslt-dev git'
+
+WORKDIR app
+COPY Gemfile* ./
+COPY --from=builder /usr/local/bundle /usr/local/bundle
+COPY --from=builder app/node_modules app/node_modules
+
+RUN apk update && \
+    apk --no-cache add $RUNTIME_PACKAGES && \
+    bundle install --no-cache -j$(nproc) --without development test && \
+    bundle clean && \
+    rm -rf /usr/local/lib/ruby/gems/2.4.0/cache && \
+    rm -rf /var/cache/* && \
+    rm -rf /usr/local/bundle/cache
+
+COPY . ./
+RUN RAILS_ENV=production bundle exec rake assets:precompile
+CMD ["RAILENV=production", "bundle", "exec", "puma", "-C", "config/puma.rb"]
